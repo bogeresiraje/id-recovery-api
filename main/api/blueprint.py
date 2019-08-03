@@ -105,6 +105,19 @@ def get_user():
 		return jsonify({ 'fail': True })
 
 
+# Return user
+@api.route('/get_user_by_id', methods=['GET', 'POST'])
+def get_user_by_id():
+	if request.method == 'POST':
+		user_id = request.form['user_id']
+		user = UserHandler().get_user_by_id(user_id)
+		return jsonify({ 'user': user })
+
+	else :
+		return jsonify({ 'fail': True })
+
+
+
 # Change profile photo
 @api.route('/change_profile_photo', methods=['GET', 'POST'])
 def change_profile_photo():
@@ -150,6 +163,29 @@ def edit_phone():
 		email, phone = request.form['email'], request.form['phone']
 		user = UserHandler().edit_user_phone(email, phone);
 		return jsonify({ 'user': user })
+
+	else:
+		return jsonify({ 'fail': True })
+
+
+# Detect face
+@api.route('/detect_face', methods=['GET', 'POST'])
+def detect_face():
+	if request.method == 'POST':
+		photo = request.files['photo']
+		return jsonify({ 'face_detected': True })
+
+	else:
+		return jsonify({ 'fail': True })
+
+
+# Search For Owner
+@api.route('/search_owner', methods=['GET', 'POST'])
+def search_owner():
+	if request.method == 'POST':
+		photo = request.files['photo']
+		user_id = UserHandler().search_owner(photo)
+		return jsonify({ 'owner_id': user_id })
 
 	else:
 		return jsonify({ 'fail': True })

@@ -13,6 +13,11 @@ class UserHandler:
 		return user
 
 	@staticmethod
+	def get_user_by_id(user_id):
+		user = Account.query.get(user_id)
+		return UserHandler().get_user(user.email)
+
+	@staticmethod
 	def change_profile_photo(email, photo):
 		photo_name = photo.filename
 		photo_file = os.path.join(app.config['STATIC_DIR'], photo_name)
@@ -49,4 +54,9 @@ class UserHandler:
 		user.phone = phone
 		db.session.commit()
 		return UserHandler().get_user(user.email)
+
+	@staticmethod
+	def search_owner(photo):
+		user = Account.query.all()[0]
+		return user.id
 
