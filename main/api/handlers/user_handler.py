@@ -1,6 +1,9 @@
 import os
+import cv2
+
 from main.app import app, db
-from main.models import Account
+from main.models import Account, FaceData
+from main.api.handlers.count_handler import CountHandler
 
 
 class UserHandler:
@@ -17,6 +20,14 @@ class UserHandler:
 		user = Account.query.get(user_id)
 		return UserHandler().get_user(user.email)
 
+
+	@staticmethod
+	def update_data_set(email, data_set_name):
+		user = Account.query.filter(Account.email == email).first()
+		face_data = FaceData(data_name=data_set_name)
+		db.session.add(face_data)
+		user.data_sets.append(face_data)
+
 	@staticmethod
 	def change_profile_photo(email, photo):
 		photo_name = photo.filename
@@ -30,13 +41,13 @@ class UserHandler:
 		return UserHandler().get_user(user.email)
 
 	@staticmethod
-	def change_id_photo(email, photo):
-		photo_name = photo.filename
-		photo_file = os.path.join(app.config['STATIC_DIR'], photo_name)
-		photo.save(photo_file)
+	def change_id_photo(email, img):
+		img_name = 'id_recov_' + str(CountHandler.get_count()) + '.jpg'
+		filename = app.config['STATIC_DIR'] + '/' + img_name
+		cv2.imwrite(filename, img)
 
 		user = Account.query.filter(Account.email == email).first()
-		user.id_image_name = photo_name
+		user.id_image_name = img_name
 		db.session.commit()
 
 		return UserHandler().get_user(user.email)

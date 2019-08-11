@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from main.api.access_control.pending_account import *
 from main.api.handlers.user_handler import UserHandler
+from main.api.face.face_rec import FaceRec
 
 
 api = Blueprint('api', __name__, static_folder='uploads')
@@ -137,8 +138,12 @@ def change_id_photo():
 	if request.method == 'POST':
 		email = request.form['email']
 		photo = request.files['photo']
-		user = UserHandler().change_id_photo(email, photo)
-		return jsonify({ 'user': user })
+		face_rec = FaceRec(email, photo)
+		if face_rec.detect_face()[0]:
+			user = face_rec.change_id_photo()
+			return jsonify({ 'user': user })
+		else:
+			return jsonify({ 'no_face_detected': True })
 
 	else:
 		return jsonify({ 'fail': True })
@@ -168,24 +173,19 @@ def edit_phone():
 		return jsonify({ 'fail': True })
 
 
-# Detect face
-@api.route('/detect_face', methods=['GET', 'POST'])
-def detect_face():
-	if request.method == 'POST':
-		photo = request.files['photo']
-		return jsonify({ 'face_detected': True })
-
-	else:
-		return jsonify({ 'fail': True })
-
-
 # Search For Owner
 @api.route('/search_owner', methods=['GET', 'POST'])
 def search_owner():
 	if request.method == 'POST':
 		photo = request.files['photo']
-		user_id = UserHandler().search_owner(photo)
-		return jsonify({ 'owner_id': user_id })
+		face_rec = FaceRec(None, photo)
+		found, faces = face_rec.detect_face()
+		if found:
+			owner_id = face_rec.search_photo()
+			if owner_id:
+				return jsonify({ 'owner_id': owner_id })
+			return jsonify({ 'no_owner_found': True })
+		return jsonify({ 'no_face_detected': True })
 
 	else:
 		return jsonify({ 'fail': True })
