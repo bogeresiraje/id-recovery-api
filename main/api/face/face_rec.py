@@ -119,6 +119,13 @@ class FaceRec(object):
 
 
 	def read_images(self, path, sz=None):
+		# Check if path exists
+		if os.path.exists(path):
+			continue
+		else:
+			_dir = os.path.join(path, 'bs')
+			os.mkdir(_dir)
+
 		x, y = [], []
 		for dirname, dirnames, filenames in os.walk(path):
 			for subdirname in dirnames:
