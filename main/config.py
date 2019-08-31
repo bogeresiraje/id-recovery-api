@@ -35,8 +35,8 @@ class Configuration(object):
 	STATIC_DIR = os.path.join(APPLICATION_DIR, 'api/uploads')
 	# Path for remporary images -> for face detection
 	TEMP_IMAGES = os.path.join(APPLICATION_DIR, 'api/face/temp_images')
- 	# Path forOpenCV haar cascades
- 	CASCADES_DIR = os.path.join(APPLICATION_DIR, 'api/face/cascades')
+	# Path forOpenCV haar cascades
+	CASCADES_DIR = os.path.join(APPLICATION_DIR, 'api/face/cascades')
 	# Path for data sets.
 	DATA_SETS_DIR = os.path.join(APPLICATION_DIR, 'api/face/data_sets')
 	SECRET_KEY = 'hgdfydUH#&SF@Fhytdt5785'
