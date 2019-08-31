@@ -89,7 +89,7 @@ class FaceRec(object):
 					pass
 				else:
 					path = os.path.join(app.config['APPLICATION_DIR'], 'api/face/data_sets/bs')
-					os.mkdir(path)
+					os.makedirs(path)
 
 				file = path + img_name
 				actual_faces.append((file, img_name, face))
@@ -133,7 +133,7 @@ class FaceRec(object):
 			pass
 		else:
 			_dir = os.path.join(app.config['APPLICATION_DIR'], 'api/face/data_sets/bs')
-			os.mkdir(_dir)
+			os.makedirs(_dir)
 
 		x, y = [], []
 		for dirname, dirnames, filenames in os.walk(path):
