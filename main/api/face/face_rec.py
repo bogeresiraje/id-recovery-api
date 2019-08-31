@@ -88,7 +88,7 @@ class FaceRec(object):
 				if os.path.exists(path):
 					pass
 				else:
-					path = os.app.join(app.config['APPLICATION_DIR'], 'api/face/data_sets/bs')
+					path = os.path.join(app.config['APPLICATION_DIR'], 'api/face/data_sets/bs')
 					os.mkdir(path)
 
 				file = path + img_name
