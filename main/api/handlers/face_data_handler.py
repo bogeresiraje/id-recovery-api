@@ -1,19 +1,21 @@
 from main.app import db
-from main.models import FaceData, Account
+from main.models import Face, Account, Photo
 
 
 class FaceDataHandler(object):
 	@staticmethod
 	def get_id_by_filename(filename):
-		face_data = FaceData.query.filter(FaceData.data_name == filename).first()
+		face_data = Face.query.filter(Face.data_name == filename).first()
 		return face_data.id
 
 	@staticmethod
-	def update_data(email, data_name):
+	def update_data(email, identifier, photo_name, data_name):
 		user = Account.query.filter(Account.email == email).first()
+		photo = PhotoBag(identifier=identifier, photo_name=photo_name)
 		face_data = FaceData(data_name=data_name)
-		db.session.add(face_data)
-		user.data_sets.append(face_data)
+		photo.photo_data.append(face_data)
+		user.photos.append(photo)
+		db.session.add_all([face_data, photo])
 		db.session.commit()
 
 

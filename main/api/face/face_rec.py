@@ -3,10 +3,19 @@ import sys
 import cv2
 import numpy as np
 from werkzeug import secure_filename
+from main.models import Account, Photo, Face
 from main.app import app, db
 from main.api.handlers.count_handler import CountHandler
 from main.api.handlers.user_handler import UserHandler
 from main.api.handlers.face_data_handler import FaceDataHandler
+
+
+def write_face(face):
+	pass
+
+
+def write_photo(photo):
+	pass
 
 
 class FaceRec(object):
@@ -18,9 +27,12 @@ class FaceRec(object):
 
 	def initialize(self):
 		# Initialize face and eye cascades
+
+		# Pre-trained model for face detection
 		face_cascade_path = os.path.join(
 				app.config['CASCADES_DIR'], 'haarcascade_frontalface_default.xml'
 			)
+		# Pre-trained model for eye detection
 		eye_cascade_path = os.path.join(
 				app.config['CASCADES_DIR'], 'haarcascade_eye.xml'
 			)
@@ -43,47 +55,67 @@ class FaceRec(object):
 
 		# Read temporary image
 		img = cv2.imread(file)
+		# Reshape to (400, 400)
+		img = cv2.resize(img, (1000, 1000), interpolation=cv2.INTER_AREA)
 		self.img = img
 		# Convert to grayscale
 		gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+		# Delete temporary image
+		if os.path.exists(file):
+			os.remove(file)
+		else:
+			print(file, 'does not exist')
+			pass
+
 		# Detect faces
 		found, actual_faces = False, []
-		faces = face_cascade.detectMultiScale(gray_img, 1.03, 2)
+		faces = face_cascade.detectMultiScale(gray_img, 1.03, 5)
 		for (x,y,w,h) in faces:
 			# Check for eyes in the detected region.
 			# This confirms that this is truly a face
 			roi = gray_img[y:y+h, x:x+w]
-			eyes = eye_cascade.detectMultiScale(roi, 1.03, 1)
+			eyes = eye_cascade.detectMultiScale(roi, 1.03, 5)
 			if len(eyes):
 				# Face has been detected.
-				# Save face data in the ( data_sets ) directory.
-				# This will later be used for facial recoginition.
-				# Resize to ( 200x200 ) pixels.
+				# Resize to ( 400x400 ) pixels.
 				face = cv2.resize(roi, (200, 200), interpolation=cv2.INTER_LINEAR)
 				count = CountHandler.get_count()
 				img_name = str(count) + '.pgm'
 				file = app.config['DATA_SETS_DIR'] + '/bs/' + img_name
 				actual_faces.append((file, img_name, face))
 				found = True
+
 		self.actual_faces = actual_faces
 		return found, None
 
 
 	# Save face train data, only called when user is also identified.
-	def save_data(self, email):
+	def save_data(self, email, identifier):
 		actual_faces = self.actual_faces.copy()
+		# Photo obj
+		photo_name = 'id_recov_' + str(CountHandler.get_count()) + '.jpg'
+		filename = app.config['STATIC_DIR'] + '/' + photo_name
+		cv2.imwrite(filename, self.img)
+
+		photo = Photo(identifier=identifier, photo_name=photo_name)
+		# User obj
+		user = Account.query.filter(Account.email == email).first()
 		for (file, img_name, face ) in actual_faces:
 			cv2.imwrite(file, face)
-			FaceDataHandler.update_data(email, img_name)
+			# Face object
+			face = Face(data_name=img_name)
+			photo.faces.append(face)
+			db.session.add(face)
+
+		user.id_photos.append(photo)
+		db.session.add(photo)
+		db.session.commit()
+		return user.id
 
 
-	def change_id_photo(self):
-		self.save_data(self.email)
-		img = self.img.copy()
-		# Resize to ( 500x500 ) size
-		img = cv2.resize(img, (500, 500), interpolation=cv2.INTER_AREA)
-		return UserHandler.change_id_photo(self.email, img)
+	def add_id_photo(self, identifier):
+		return self.save_data(self.email, identifier)
 
 
 	def read_images(self, path, sz=None):
@@ -107,11 +139,10 @@ class FaceRec(object):
 						print('IO Error({0}): {1}'.format(
 								IOError.errno, IOError.strerror
 							))
-						raise
 
 					except:
 						print('Unexpected error: ', sys.exc_info()[0])
-						raise
+						
 		return [x,y]
 
 
@@ -120,13 +151,20 @@ class FaceRec(object):
 		[x,y] = self.read_images(app.config['DATA_SETS_DIR'])
 		y = np.asarray(y, dtype=np.int32)
 
+		# Initialize EigenFace face recognizer
 		model = cv2.face.EigenFaceRecognizer_create()
+		# Train the face recognition model with sample images
 		model.train(np.asarray(x), np.asarray(y))
 		for ( file, img_name, face ) in self.actual_faces:
 			label, confidence = model.predict(face)
 			print(confidence)
-			if confidence <= 4500:
-				owner_id, email = FaceDataHandler.get_user(label)
-				self.save_data(email)
-				break
-		return owner_id
+			if confidence <= 4000:
+				face = Face.query.get(label)
+				id_photo = face.photos[0]
+				_u = id_photo.users[0]
+				user = {}
+				user.update(_u.__dict__)
+				user.pop('_sa_instance_state', -1)
+				user['found_id_photo'] = id_photo.photo_name
+				user['found_id_name'] = id_photo.identifier
+				return user

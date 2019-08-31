@@ -50,8 +50,8 @@ def confirm_verfication_code():
 			# Otherwise notify the user
 			if confirm_account.is_code_valid():
 				# Create new account
-				user = confirm_account.create_account()
-				return jsonify({ 'user': user })
+				email = confirm_account.create_account()
+				return jsonify({ 'email': email })
 
 			else:
 				confirm_account.delete_pending_account()
@@ -132,19 +132,30 @@ def change_profile_photo():
 		return jsonify({ 'fail': True })
 
 
-# Change id photo
-@api.route('/change_id_photo', methods=['GET', 'POST'])
-def change_id_photo():
+# Add id photo
+@api.route('/add_id_photo', methods=['GET', 'POST'])
+def add_id_photo():
 	if request.method == 'POST':
-		email = request.form['email']
+		email, identifier = request.form['email'], request.form['identifier']
 		photo = request.files['photo']
 		face_rec = FaceRec(email, photo)
 		if face_rec.detect_face()[0]:
-			user = face_rec.change_id_photo()
-			return jsonify({ 'user': user })
+			user_id = face_rec.add_id_photo(identifier)
+			return jsonify({ 'user_id': user_id })
 		else:
 			return jsonify({ 'no_face_detected': True })
 
+	else:
+		return jsonify({ 'fail': True })
+
+
+# Delete ID photo
+@api.route('/delete_id', methods=['GET', 'POST'])
+def delete_id():
+	if request.method == 'POST':
+		photo_id = request.form['photo_id']
+		UserHandler.delete_id(photo_id)
+		return jsonify(({ 'photo_id': int(photo_id) }))
 	else:
 		return jsonify({ 'fail': True })
 
@@ -181,11 +192,33 @@ def search_owner():
 		face_rec = FaceRec(None, photo)
 		found, faces = face_rec.detect_face()
 		if found:
-			owner_id = face_rec.search_photo()
-			if owner_id:
-				return jsonify({ 'owner_id': owner_id })
+			user = face_rec.search_photo()
+			if user:
+				return jsonify({ 'user': user })
 			return jsonify({ 'no_owner_found': True })
 		return jsonify({ 'no_face_detected': True })
 
+	else:
+		return jsonify({ 'fail': True })
+
+
+# View all photos
+@api.route('/view_all', methods=['GET', 'POST'])
+def view_all():
+	if request.method == 'POST':
+		user_id = request.form['user_id']
+		photos = list(UserHandler.get_all_photos(user_id))
+		return jsonify({ 'photos': photos })
+	else:
+		return jsonify({ 'fail': True })
+
+
+# For deleting account.
+@api.route('/delete_account', methods=['GET', 'POST'])
+def delete_account():
+	if request.method == 'POST':
+		user_id = request.form['user_id']
+		UserHandler.delete_account(user_id)
+		return jsonify({ 'success': True })
 	else:
 		return jsonify({ 'fail': True })
