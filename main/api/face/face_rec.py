@@ -82,7 +82,16 @@ class FaceRec(object):
 				face = cv2.resize(roi, (200, 200), interpolation=cv2.INTER_LINEAR)
 				count = CountHandler.get_count()
 				img_name = str(count) + '.pgm'
-				file = app.config['DATA_SETS_DIR'] + '/bs/' + img_name
+
+				# Check if data sets dir ( path ) exists
+				path =  app.config['DATA_SETS_DIR'] + '/bs/'
+				if os.path.exists(path):
+					pass
+				else:
+					path = os.path.join(os.path.config['APPLICATION_DIR'], 'api/face/data_sets/bs')
+					os.mkdir(path)
+
+				file = path + img_name
 				actual_faces.append((file, img_name, face))
 				found = True
 
@@ -123,7 +132,7 @@ class FaceRec(object):
 		if os.path.exists(path):
 			pass
 		else:
-			_dir = os.path.join(path, 'bs')
+			_dir = os.path.join(os.path.config['APPLICATION_DIR'], 'api/face/data_sets/bs')
 			os.mkdir(_dir)
 
 		x, y = [], []
