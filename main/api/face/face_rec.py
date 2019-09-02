@@ -79,7 +79,7 @@ class FaceRec(object):
 			if len(eyes):
 				# Face has been detected.
 				# Resize to ( 400x400 ) pixels.
-				face = cv2.resize(roi, (200, 200), interpolation=cv2.INTER_LINEAR)
+				face = cv2.resize(roi, (600, 600), interpolation=cv2.INTER_LINEAR)
 				count = CountHandler.get_count()
 				img_name = str(count) + '.pgm'
 
@@ -146,7 +146,7 @@ class FaceRec(object):
 						img = cv2.imread(os.path.join(subject_path, filename), cv2.IMREAD_GRAYSCALE)
 						# Resize to given size if given
 						if sz is not None:
-							cv2.resize(img, (200, 200))
+							cv2.resize(img, (600, 600))
 						x.append(np.asarray(img, dtype=np.uint8))
 						image_id = FaceDataHandler.get_id_by_filename(filename)
 						y.append(image_id)
