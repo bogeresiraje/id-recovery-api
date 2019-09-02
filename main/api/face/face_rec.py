@@ -56,7 +56,7 @@ class FaceRec(object):
 		# Read temporary image
 		img = cv2.imread(file)
 		# Reshape to (400, 400)
-		img = cv2.resize(img, (1000, 1000), interpolation=cv2.INTER_AREA)
+		img = cv2.resize(img, (600, 600), interpolation=cv2.INTER_AREA)
 		self.img = img
 		# Convert to grayscale
 		gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -70,12 +70,12 @@ class FaceRec(object):
 
 		# Detect faces
 		found, actual_faces = False, []
-		faces = face_cascade.detectMultiScale(gray_img, 1.03, 5)
+		faces = face_cascade.detectMultiScale(gray_img, 1.03, 2)
 		for (x,y,w,h) in faces:
 			# Check for eyes in the detected region.
 			# This confirms that this is truly a face
 			roi = gray_img[y:y+h, x:x+w]
-			eyes = eye_cascade.detectMultiScale(roi, 1.03, 5)
+			eyes = eye_cascade.detectMultiScale(roi, 1.03, 2)
 			if len(eyes):
 				# Face has been detected.
 				# Resize to ( 400x400 ) pixels.
